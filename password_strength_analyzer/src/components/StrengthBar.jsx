@@ -9,18 +9,24 @@ function StrengthBar({ score }) {
   };
 
   return (
-    <div>
-      <div style={{ height: "10px", background: "#ddd" }}>
-        <div
-          style={{
-            width: `${score}%`,
-            height: "100%",
-            background: getColor(),
-          }}
-        />
-      </div>
+   <div style={{ marginTop: "15px" }}>
+    <div style={{
+      height: "12px",
+      background: "#eee",
+      borderRadius: "10px",
+      overflow: "hidden"
+    }}>
+      <div
+        style={{
+          width: `${score}%`,
+          height: "100%",
+          background: getColor(),
+          transition: "all 0.4s ease"
+        }}
+      />
     </div>
-  );
+  </div>
+);
 }
 
 export default StrengthBar;
