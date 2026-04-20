@@ -25,32 +25,52 @@ export function analyzePassword(password) {
 }
 
 export function calculateCrackTime(password) {
-  let charsetSize = 0;
+  if (!password) return "0 seconds";
 
-  if (/[a-z]/.test(password)) charsetSize += 26;
-  if (/[A-Z]/.test(password)) charsetSize += 26;
-  if (/[0-9]/.test(password)) charsetSize += 10;
-  if (/[^A-Za-z0-9]/.test(password)) charsetSize += 32;
+  let entropy = 0;
+  const len = password.length;
   
+  //console.log("password length-> ", password.length)
 
-  if (charsetSize === 0) return "0 seconds";
+  //1. Base Entropy based on length
+  if (len >= 1) entropy += 4;                           //First char
+  if (len > 1) entropy += Math.min(len - 1, 7) * 2;     //chars 2-8
+  if (len > 8) entropy += Math.min(len - 8, 12) * 1.5;  //chars 9-20
+  if (len > 20) entropy += (len - 20) * 1;              //chars 21+
 
-  const length = password.length;
+  //2. Bonus for complexity
+  const hasUpper = /[A-Z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
+  const hasSpecial = /[^A-Za-z0-9]/.test(password);
+  
+  if (hasUpper && (hasNumber || hasSpecial)) {
+    entropy += 6; 
+  }
 
-  const combinations = Math.pow(charsetSize, length);
+  //3. Simple Dictionary/Pattern Penalty 
+  //This catches commonly used words such as "Password", "123456", "Qwerty", "admin", etc.
+  const commonPatterns = ["password", "123456", "qwerty", "admin", "welcome", "admin123", "adminPass"];
+  if (commonPatterns.includes(password.toLowerCase())) {
+    entropy = Math.max(entropy - 15, 5);      //Massive penalty for exact matches
+  }
 
-  // Assume attacker speed: 1 billion attempts/sec
-  // limit very large numbers
-if (!isFinite(combinations)) {
-  return "Millions of years";
+  //console.log("entropy-> ", entropy);
 
-}
-  const attemptsPerSecond = 1e9;
-
+  //4. Calculate Guesses and Time
+  //2^entropy = total combinations in the "human-likely" space
+  const combinations = Math.pow(2, entropy);
+  
+  //console.log("combinations-> ", combinations);
+  
+  //Assuming a medium-pace offline attack (1 million guesses/sec.)
+  const attemptsPerSecond = 1e6; 
   const seconds = combinations / attemptsPerSecond;
 
-  return formatTime(seconds) 
+  if (!isFinite(combinations)) {
+    return "Millions of years";
 
+  }
+  return formatTime(seconds) 
 }
 
 function formatTime(seconds) {
